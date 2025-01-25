@@ -1,0 +1,103 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Syncora API",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4000/api"
+    }
+  ],
+  "paths": {
+    "/createUser": {
+      "post": {
+        "summary": "Create a new user",
+        "operationId": "createUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "example": "14"
+                  },
+                  "userAddress": {
+                    "type": "string",
+                    "example": "7gdPSvwxvBRpUN7mEQnGse21j9Pi1mMzm8CApbEao2xF"
+                  },
+                  "userDataObjects": {
+                    "type": "object",
+                    "properties": {
+                      "data": {
+                        "type": "string",
+                        "example": "123456"
+                      }
+                    }
+                  }
+                }
+              },
+              "example": {
+                "userId": "14",
+                "userAddress": "7gdPSvwxvBRpUN7mEQnGse21j9Pi1mMzm8CApbEao2xF",
+                "userDataObjects": { "data": "123456" }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User created successfully"
+          }
+        }
+      }
+    },
+    "/getUser": {
+      "get": {
+        "summary": "Get user details",
+        "operationId": "getUserDetails",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "14"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User details retrieved successfully"
+          }
+        }
+      }
+    },
+    "/getTransactionDetails": {
+      "get": {
+        "summary": "Get transactions by user ID",
+        "operationId": "getTransactionsByUserId",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "14"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transactions retrieved successfully"
+          }
+        }
+      }
+    }
+  }
+}
