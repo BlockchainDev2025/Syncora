@@ -6,6 +6,8 @@ var userApi = require('../controller/userManagement');
 router.post('/createUser',userApi.addAccount);
 router.get('/getUser',userApi.getAccount);
 router.get('/getTransactionDetails',userApi.getTransactionDetails);
+router.post('/addJSONData',userApi.solanaTransaction);
+
 
 
 module.exports = router

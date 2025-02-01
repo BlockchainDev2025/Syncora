@@ -8,7 +8,7 @@ const transactionModel = new Schema({
     fromAddress: { type: String },
     toAddress: { type: String },
     transactionHash: { type: String },
-    transactionHash: { type: String },
+    transactionHash: { type: String }
 })
 
 module.exports = mongoose.model('transactionModel', transactionModel); 

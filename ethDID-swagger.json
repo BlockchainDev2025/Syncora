@@ -55,6 +55,46 @@
         }
       }
     },
+    "/addJSONData": {
+      "post": {
+        "summary": "Add json data for the user",
+        "operationId": "addJSONData",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "example": "14"
+                  },
+                  "userDataObjects": {
+                    "type": "object",
+                    "properties": {
+                      "data": {
+                        "type": "string",
+                        "example": "123456"
+                      }
+                    }
+                  }
+                }
+              },
+              "example": {
+                "userId": "14",
+                "userDataObjects": { "data": "123456" }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON data added successfully"
+          }
+        }
+      }
+    },
     "/getUser": {
       "get": {
         "summary": "Get user details",
