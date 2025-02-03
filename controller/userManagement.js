@@ -57,7 +57,20 @@ async function getTransactionDetails(req, res) {
         const numTx = 100;
         const pubKey = new PublicKey(address);
         let transactionList = await connection.getSignaturesForAddress(pubKey, { limit: numTx });
-        res.send({ transactions: transactionList, userData: accounts });
+
+        function paginateArray(data, pageSize) {
+            const paginatedResult = {};
+            
+            for (let i = 0; i < data.length; i += pageSize) {
+                const pageNumber = (i / pageSize) + 1;
+                paginatedResult[pageNumber] = data.slice(i, i + pageSize);
+            }
+            
+            return paginatedResult;
+        }
+        const paginatedData = paginateArray(transactionList, 10);
+
+        res.send({ transactions: paginatedData, userData: accounts });
     } catch (error) {
         console.error('Error fetching transactions:', error);
     }
