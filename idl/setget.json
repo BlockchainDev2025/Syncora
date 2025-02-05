@@ -1,0 +1,61 @@
+{
+  "version": "0.1.0",
+  "name": "setget",
+  "instructions": [
+    {
+      "name": "writeJsonData",
+      "accounts": [
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "journalEntry",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "uniqueId",
+          "type": "u64"
+        },
+        {
+          "name": "jsonData",
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "JournalEntry",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "uniqueId",
+            "type": "u64"
+          },
+          {
+            "name": "content",
+            "type": "string"
+          }
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "address": "4MYMz8XbyrsNBDEKpiksuemghXaJBofiC2cqUX4gnJZc"
+  }
+}
