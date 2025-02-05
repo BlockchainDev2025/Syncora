@@ -1,7 +1,7 @@
-const axios = require('axios');
 const HostURL = require("../config/config.json");
 const newUserModel = require('../models/userModel');
 const jwt = require('jsonwebtoken');
+const axios = require('axios');
 const { Connection, PublicKey,
     Keypair,
     Transaction,
@@ -9,6 +9,17 @@ const { Connection, PublicKey,
     sendAndConfirmTransaction } = require('@solana/web3.js');
 const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
 const bs58 = require('bs58');
+// const {Program} = require("@project-serum/anchor");
+// const AnchorProvider = require("@project-serum/anchor");
+const idl = require("../idl/setget.json");
+const { Buffer } = require("buffer");
+const SEEDS = Buffer.from("json");
+const programID = new PublicKey(idl.metadata.address);
+const { Program, AnchorProvider, BN, Wallet } = require("@project-serum/anchor");
+const anchor = require("@project-serum/anchor");
+const { clusterApiUrl } = require("@solana/web3.js");
+
+
 
 async function addAccount(req, res) {
     try {
@@ -21,6 +32,7 @@ async function addAccount(req, res) {
         newAccount.userId = req.body.userId;
         newAccount.userAddress = req.body.userAddress;
         newAccount.userDataObjects = req.body.userDataObjects;
+        newAccount.enteries = 1;
 
         // Save the new account to the database and return the result
         await newAccount.save();
@@ -52,25 +64,22 @@ async function getAccount(req, res) {
  */
 async function getTransactionDetails(req, res) {
     try {
-        const accounts = await newUserModel.find({ userId: req.query.userId });
-        const address = accounts[0].userAddress; // Replace with the Solana address
-        const numTx = 100;
-        const pubKey = new PublicKey(address);
-        let transactionList = await connection.getSignaturesForAddress(pubKey, { limit: numTx });
+        var userData = await newUserModel.findOne({ userId: req.query.userId });
+        let transactionList = userData.userDataObjects;
 
         function paginateArray(data, pageSize) {
             const paginatedResult = {};
-            
+
             for (let i = 0; i < data.length; i += pageSize) {
                 const pageNumber = (i / pageSize) + 1;
                 paginatedResult[pageNumber] = data.slice(i, i + pageSize);
             }
-            
+
             return paginatedResult;
         }
         const paginatedData = paginateArray(transactionList, 10);
 
-        res.send({ transactions: paginatedData, userData: accounts });
+        res.send({ status: true, transactions: paginatedData });
     } catch (error) {
         console.error('Error fetching transactions:', error);
     }
@@ -79,57 +88,114 @@ async function getTransactionDetails(req, res) {
 
 async function solanaTransaction(req, res) {
 
+    try {
+        var userData = await newUserModel.findOne({ userId: req.body.userId });
+        let transactionList = userData.userDataObjects;
 
-    var userData = await newUserModel.findOne({ userId: req.body.userId });
+        const uniqueId = userData.enteries;
+        const jsonData = JSON.stringify(req.body.userDataObjects);
+        const walletAddress = req.body.walletAddress; //"ttfHNxjfV8CANajod3gLu4xqLYog3tcP926VbPs6MGf";
 
-    // Check if user exists
-    if (!userData) {
-        res.send({ status: false, message: 'User not found' });
-    }
-    else {
-            await userData.userDataObjects.push(req.body.userDataObjects);
-            await newUserModel.findOneAndUpdate({ userId: req.body.userId },{userDataObjects : userData.userDataObjects});
-
-            // Your deployed program ID
-            const programId = new PublicKey('3KjFjeSdLuiLQi7utSfuhjHdXES7wkHCTWA76m1rUyPt'); // Replace with your program's actual ID
-
-            // Sender keypair (e.g., the wallet you're using)
-            const senderKeypair = await Keypair.fromSecretKey(bs58.decode('54Avr7f2J8Zfb3QsNh1aWozuLtTRGZGQYsCJXkhbVyEBjvN7786bfk9h3FrxswPyNjddEUd3aJVYv7CevbaWAmJf'));
-
-            const transaction = await new Transaction();
-
-            // Set up the instruction to call 'use_constants'
-            const instructionData = await Buffer.alloc(8);  // The data passed to the program; empty here as 'use_constants' has no arguments
-
-            const instruction = {
-                programId: programId, // The program you want to call
-                keys: [
-                    { pubkey: senderKeypair.publicKey, isSigner: true, isWritable: false },
-                ],
-                data: instructionData, // Empty data since the function has no parameters
-            };
-
-            // Add the instruction to the transaction
-            await transaction.add(instruction);
-
-            // Send the transaction
-            try {
-                // Sign and send the transaction
-                const signature = await sendAndConfirmTransaction(connection, transaction, [senderKeypair]);
-                res.send({ status: true, hash: programId });
-            } catch (errorTransactio) {
-                res.send({ status: true, hash: programId })
-            }
+        if (!uniqueId || !jsonData || !walletAddress) {
+            return res.status(400).json({ error: "Missing required fields" });
         }
+
+        const privateKeyBuffer = bs58.decode(req.body.pk)  //54Avr7f2J8Zfb3QsNh1aWozuLtTRGZGQYsCJXkhbVyEBjvN7786bfk9h3FrxswPyNjddEUd3aJVYv7CevbaWAmJf
+        const walletKeypair = Keypair.fromSecretKey(Buffer.from(privateKeyBuffer));
+        const walletPublicKey = walletKeypair.publicKey;
+        const provider = new AnchorProvider(connection, new Wallet(walletKeypair), {
+            preflightCommitment: "processed",
+        });
+
+        const program = new Program(idl, programID, provider);
+
+        const [json_pda] = anchor.web3.PublicKey.findProgramAddressSync(
+            [SEEDS, new BN(uniqueId).toArrayLike(Buffer, "le", 8), walletPublicKey.toBuffer()],
+            program.programId
+        );
+
+        const transaction = await program.methods.writeJsonData(new BN(uniqueId), jsonData).accounts({
+            owner: walletPublicKey,
+            journalEntry: json_pda,
+            systemProgram: SystemProgram.programId
+        }).transaction();
+        let blockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
+        transaction.recentBlockhash = blockhash;
+        transaction.sign(walletKeypair);
+        const txSignature = await provider.sendAndConfirm(transaction, [walletKeypair]);
+        const transactionData = await connection.getTransaction(txSignature);
+        const timestampp = transactionData.blockTime;
+        if (req.body.userDataObjects) {
+            var inputJSON = req.body.userDataObjects;
+            var finalObj = {
+                from : req.body.walletAddress,
+                timestamp : timestampp ,
+                transactionHash: txSignature,
+                metaData: inputJSON,
+                status: true
+            };
+            await userData.userDataObjects.push(finalObj);
+            await newUserModel.findOneAndUpdate({ userId: req.body.userId, enteries: userData.enteries + 1 });
+            await newUserModel.findOneAndUpdate({ userId: req.body.userId },{userDataObjects : userData.userDataObjects});
+        }
+
+        return res.json({ message: "Data stored successfully!", transaction: transactionData });
+    } catch (err) {
+        console.error("Error:", err);
+        return res.status(500).json({ error: "Failed to store data" });
     }
+}
+
+async function getData(req, res) {
+    try {
+        const walletAddress = req.query.address;
+        const uniqueId = new BN('1');
+        if (!uniqueId || !walletAddress) {
+            return res.status(400).json({ error: "Missing required fields" });
+        }
+
+        const walletPublicKey = new PublicKey(walletAddress);
+        const provider = new AnchorProvider(connection, null, {
+            preflightCommitment: "processed",
+        });
+
+        const program = new Program(idl, programID, provider);
+
+        const [json_pda] = anchor.web3.PublicKey.findProgramAddressSync(
+            [SEEDS, new anchor.BN(uniqueId).toArrayLike(Buffer, "le", 8), walletPublicKey.toBuffer()],
+            program.programId
+        );
+        console.log(json_pda)
+
+        const account = await program.account.journalEntry.fetch(json_pda);
+        let parsedContent;
+
+        try {
+            parsedContent = JSON.parse(account.content);
+        } catch (e) {
+            parsedContent = account.content;
+        }
+
+        return res.json({
+            ...account,
+            owner: account.owner.toBase58(),
+            uniqueId: account.uniqueId.toString(),
+            content: parsedContent,
+        });
+    } catch (err) {
+        console.error("Error:", err);
+        return res.status(500).json({ error: "Failed to fetch data" });
+    }
+};
 
 
 
 
 
-    module.exports = {
-        addAccount,
-        getAccount,
-        getTransactionDetails,
-        solanaTransaction
-    };
+module.exports = {
+    addAccount,
+    getAccount,
+    getTransactionDetails,
+    solanaTransaction,
+    getData
+};

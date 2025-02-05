@@ -43,7 +43,9 @@
               "example": {
                 "userId": "14",
                 "userAddress": "7gdPSvwxvBRpUN7mEQnGse21j9Pi1mMzm8CApbEao2xF",
-                "userDataObjects": { "data": "123456" }
+                "userDataObjects": {
+                  "data": "123456"
+                }
               }
             }
           }
@@ -70,20 +72,32 @@
                     "type": "string",
                     "example": "14"
                   },
+                  "walletAddress": {
+                    "type": "string",
+                    "example": "ttfHNxjfV8CANajod3gLu4xqLYog3tcP926VbPs6MGf"
+                  },
+                  "pk": {
+                    "type": "string",
+                    "example": "54Avr7f2J8Zfb3QsNh1aWozuLtTRGZGQYsCJXkhbVyEBjvN7786bfk9h3FrxswPyNjddEUd3aJVYv7CevbaWAmJf"
+                  },
                   "userDataObjects": {
                     "type": "object",
                     "properties": {
                       "data": {
                         "type": "string",
-                        "example": "123456"
+                        "example": "Data stored successfully, This is the second Data!"
                       }
                     }
                   }
                 }
               },
               "example": {
-                "userId": "14",
-                "userDataObjects": { "data": "123456" }
+                "userId": "21",
+                "walletAddress": "ttfHNxjfV8CANajod3gLu4xqLYog3tcP926VbPs6MGf",
+                "pk": "54Avr7f2J8Zfb3QsNh1aWozuLtTRGZGQYsCJXkhbVyEBjvN7786bfk9h3FrxswPyNjddEUd3aJVYv7CevbaWAmJf",
+                "userDataObjects": {
+                  "message": "Data stored successfully, This is the second Data!"
+                }
               }
             }
           }
