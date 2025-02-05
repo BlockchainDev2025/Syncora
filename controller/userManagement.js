@@ -90,11 +90,11 @@ async function solanaTransaction(req, res) {
 
     try {
         var userData = await newUserModel.findOne({ userId: req.body.userId });
-        let transactionList = userData.userDataObjects;
+        let transactionList = await userData.userDataObjects;
 
-        const uniqueId = userData.enteries;
-        const jsonData = JSON.stringify(req.body.userDataObjects);
-        const walletAddress = req.body.walletAddress; //"ttfHNxjfV8CANajod3gLu4xqLYog3tcP926VbPs6MGf";
+        const uniqueId = await userData.enteries;
+        const jsonData = await JSON.stringify(req.body.userDataObjects);
+        const walletAddress = await req.body.walletAddress; //"ttfHNxjfV8CANajod3gLu4xqLYog3tcP926VbPs6MGf";
 
         if (!uniqueId || !jsonData || !walletAddress) {
             return res.status(400).json({ error: "Missing required fields" });
