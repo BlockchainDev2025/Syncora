@@ -158,6 +158,7 @@ async function updatePhantomTransaction(req, res) {
                 metaData: req.body.inputJSON,
                 status: true
             };
+            await userData.userDataObjects.push(finalObj);
             await newUserModel.findOneAndUpdate({ userId: req.body.userId, enteries: userData.enteries + 1 });
             await newUserModel.findOneAndUpdate({ userId: req.body.userId },{userDataObjects : finalObj});
             return res.json({ status : true, message: "Data stored successfully!", transaction: finalObj });
