@@ -146,6 +146,91 @@ async function solanaTransaction(req, res) {
     }
 }
 
+async function updatePhantomTransaction(req, res) {
+
+    try {
+        var userData = await newUserModel.findOne({ userId: req.body.userId });
+        if (req.body.walletAddress && req.body.timestamp && req.body.transactionHash && req.body.inputJSON) {
+            var finalObj = {
+                from : req.body.walletAddress,
+                timestamp : req.body.timestamp ,
+                transactionHash: req.body.transactionHash,
+                metaData: req.body.inputJSON,
+                status: true
+            };
+            await newUserModel.findOneAndUpdate({ userId: req.body.userId, enteries: userData.enteries + 1 });
+            await newUserModel.findOneAndUpdate({ userId: req.body.userId },{userDataObjects : finalObj});
+            return res.json({ status : true, message: "Data stored successfully!", transaction: finalObj });
+        }
+        else{
+            return res.json({ status : false, message: "Missing required fields"});
+        }
+
+    } catch (err) {
+        console.error("Error:", err);
+        return res.status(500).json({ error: "Failed to store data" });
+    }
+}
+async function addPointsBySyncora(req, res) {
+    try {
+        var userData = await newUserModel.findOne({ userId: req.body.userId });
+        let transactionList = await userData.userDataObjects;
+
+        const uniqueId = await userData.enteries;
+        const jsonData = await JSON.stringify(req.body.userDataObjects);
+        const walletAddress = await req.body.walletAddress; //"ttfHNxjfV8CANajod3gLu4xqLYog3tcP926VbPs6MGf";
+
+        if (!uniqueId || !jsonData || !walletAddress) {
+            return res.status(400).json({ error: "Missing required fields" });
+        }
+
+        const privateKeyBuffer = bs58.decode(req.body.pk)  //54Avr7f2J8Zfb3QsNh1aWozuLtTRGZGQYsCJXkhbVyEBjvN7786bfk9h3FrxswPyNjddEUd3aJVYv7CevbaWAmJf
+        const walletKeypair = Keypair.fromSecretKey(Buffer.from(privateKeyBuffer));
+        const walletPublicKey = walletKeypair.publicKey;
+        const provider = new AnchorProvider(connection, new Wallet(walletKeypair), {
+            preflightCommitment: "processed",
+        });
+
+        const program = new Program(idl, programID, provider);
+
+        const [json_pda] = anchor.web3.PublicKey.findProgramAddressSync(
+            [SEEDS, new BN(uniqueId).toArrayLike(Buffer, "le", 8), walletPublicKey.toBuffer()],
+            program.programId
+        );
+
+        const transaction = await program.methods.writeJsonData(new BN(uniqueId), jsonData).accounts({
+            owner: walletPublicKey,
+            journalEntry: json_pda,
+            systemProgram: SystemProgram.programId
+        }).transaction();
+        let blockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
+        transaction.recentBlockhash = blockhash;
+        transaction.sign(walletKeypair);
+        const txSignature = await provider.sendAndConfirm(transaction, [walletKeypair]);
+        const transactionData = await connection.getTransaction(txSignature);
+        const timestampp = transactionData.blockTime;
+        if (req.body.userDataObjects) {
+            var inputJSON = req.body.userDataObjects;
+            var finalObj = {
+                from : req.body.receiverAddress,
+                timestamp : timestampp ,
+                transactionHash: txSignature,
+                metaData: inputJSON,
+                status: true
+            };
+            await userData.userDataObjects.push(finalObj);
+            await newUserModel.findOneAndUpdate({ userId: req.body.userId, enteries: userData.enteries + 1 });
+            await newUserModel.findOneAndUpdate({ userId: req.body.userId },{userDataObjects : userData.userDataObjects});
+        }
+
+        return res.json({ message: "Data stored successfully!", transaction: transactionData });
+    } catch (err) {
+        console.error("Error:", err);
+        return res.status(500).json({ error: "Failed to store data" });
+    }
+
+}
+
 async function getData(req, res) {
     try {
         const walletAddress = req.query.address;
@@ -194,8 +279,10 @@ async function getData(req, res) {
 
 module.exports = {
     addAccount,
-    getAccount,
+    getAccount, 
     getTransactionDetails,
     solanaTransaction,
-    getData
+    getData,
+    updatePhantomTransaction,
+    addPointsBySyncora
 };

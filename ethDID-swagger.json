@@ -6,7 +6,7 @@
   },
   "servers": [
     {
-      "url": "http://localhost:4000/api"
+      "url": "http://65.2.148.143/:4000/api"
     }
   ],
   "paths": {
@@ -30,22 +30,13 @@
                     "example": "7gdPSvwxvBRpUN7mEQnGse21j9Pi1mMzm8CApbEao2xF"
                   },
                   "userDataObjects": {
-                    "type": "object",
-                    "properties": {
-                      "data": {
-                        "type": "string",
-                        "example": "123456"
-                      }
-                    }
+                    "type": "object"
                   }
                 }
               },
               "example": {
                 "userId": "14",
-                "userAddress": "7gdPSvwxvBRpUN7mEQnGse21j9Pi1mMzm8CApbEao2xF",
-                "userDataObjects": {
-                  "data": "123456"
-                }
+                "userAddress": "7gdPSvwxvBRpUN7mEQnGse21j9Pi1mMzm8CApbEao2xF"
               }
             }
           }
@@ -86,6 +77,123 @@
                       "data": {
                         "type": "string",
                         "example": "Data stored successfully, This is the second Data!"
+                      }
+                    }
+                  }
+                }
+              },
+              "example": {
+                "userId": "21",
+                "walletAddress": "ttfHNxjfV8CANajod3gLu4xqLYog3tcP926VbPs6MGf",
+                "pk": "54Avr7f2J8Zfb3QsNh1aWozuLtTRGZGQYsCJXkhbVyEBjvN7786bfk9h3FrxswPyNjddEUd3aJVYv7CevbaWAmJf",
+                "userDataObjects": {
+                  "message": "Data stored successfully, This is the second Data!"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON data added successfully"
+          }
+        }
+      }
+    },
+    "/updatePhantomTransaction": {
+      "post": {
+        "summary": "Add phantom wallet transaction data to the blockchain object to fetch the transactions later",
+        "operationId": "updatePhantomTransaction",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "example": "14"
+                  },
+                  "walletAddress": {
+                    "type": "string",
+                    "example": "ttfHNxjfV8CANajod3gLu4xqLYog3tcP926VbPs6MGf"
+                  },
+                  "timestamp": {
+                    "type": "string",
+                    "example": "123456"
+                  },
+                  "transactionHash": {
+                    "type": "string",
+                    "example": "oALCrunADs6Mz2W5YjpYuYvahV6P4FVm6R8wtGDDFf2yTaNyprn9vs9b6Peu697mY8yC5disyyKJC3eH39S9r8w"
+                  },
+                  "inputJSON": {
+                    "type": "object",
+                    "properties": {
+                      "data": {
+                        "type": "string",
+                        "example": "Data stored successfully, This is the second Data!"
+                      }
+                    }
+                  }
+                }
+              },
+              "example": {
+                "userId" : "101",
+                "inputJSON" : {
+                "message": "Data stored successfully, This is the second Data!"
+                },
+                "timestamp": "123456",
+                "walletAddress": "5uMhGih5fe1zqjnxXY2jJ7rAgsEZj4wYzM5TWnvqAyyd",
+                "transactionHash" :  "oALCrunADs6Mz2W5YjpYuYvahV6P4FVm6R8wtGDDFf2yTaNyprn9vs9b6Peu697mY8yC5disyyKJC3eH39S9r8w"
+            }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON data added successfully"
+          }
+        }
+      }
+    },
+    "/addPointsBySyncora": {
+      "post": {
+        "summary": "Add credits to the user address for the trained model",
+        "operationId": "addPointsBySyncora",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "example": "14"
+                  },
+                  "walletAddress": {
+                    "type": "string",
+                    "example": "ttfHNxjfV8CANajod3gLu4xqLYog3tcP926VbPs6MGf"
+                  },
+                  "receiverAddress": {
+                    "type": "string",
+                    "example": "7gdPSvwxvBRpUN7mEQnGse21j9Pi1mMzm8CApbEao2xF"
+                  },
+                  "pk": {
+                    "type": "string",
+                    "example": "54Avr7f2J8Zfb3QsNh1aWozuLtTRGZGQYsCJXkhbVyEBjvN7786bfk9h3FrxswPyNjddEUd3aJVYv7CevbaWAmJf"
+                  },
+                  "userDataObjects": {
+                    "type": "object",
+                    "properties": {
+                      "data": {
+                        "type": "string",
+                        "example": "Data stored successfully, This is the second Data!"
+                      },
+                      "ceredits": {
+                        "type": "numbers",
+                        "example": 100
                       }
                     }
                   }
