@@ -7,7 +7,9 @@ router.post('/createUser',userApi.addAccount);
 router.get('/getUser',userApi.getAccount);
 router.get('/getTransactionDetails',userApi.getTransactionDetails);
 router.post('/addJSONData',userApi.solanaTransaction);
-
+router.get('/getData',userApi.getData);
+router.post('/updatePhantomTransaction',userApi.updatePhantomTransaction);
+router.post('/addPointsBySyncora',userApi.addPointsBySyncora);
 
 
 module.exports = router
